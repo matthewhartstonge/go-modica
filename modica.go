@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,7 +12,7 @@ import (
 
 const (
 	defaultBaseURL = "https://api.modicagroup.com/rest/gateway/"
-	userAgent      = "go-modica"
+	userAgent      = "go-modica/" + Version
 )
 
 const (
@@ -119,10 +118,9 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	err = CheckResponse(resp)
-	if err != nil {
+	if err = checkErrorResponse(resp); err != nil {
 		// even though there was an error, we still return the response
 		// in case the caller wants to inspect it further
 		return resp, err
@@ -148,13 +146,13 @@ func (r *ErrorResponse) Error() string {
 		r.Response.StatusCode, r.Code, r.ErrorDescription)
 }
 
-// CheckResponse checks the API response for errors, and returns uniform errors
-// if present. A response is considered an error if it has a status code outside
-// the 200 range.
-// API error responses are expected to have either no response
-// body, or a JSON response body that maps to ErrorResponse. Any other
-// response body will be silently ignored.
-func CheckResponse(r *http.Response) error {
+// checkErrorResponse checks the API response for errors, and returns uniform
+// errors if present. A response is considered an error if it has a status code
+// outside the 200 range.
+// API error responses are expected to have either no response body, or a JSON
+// response body that maps to ErrorResponse. Any other response body will be
+// silently ignored.
+func checkErrorResponse(r *http.Response) error {
 	if code := r.StatusCode; 200 <= code && code <= 299 {
 		return nil
 	}
@@ -166,19 +164,27 @@ func CheckResponse(r *http.Response) error {
 		return ErrNotFound
 	}
 
-	errorResponse := &ErrorResponse{Response: r}
-	data, err := ioutil.ReadAll(r.Body)
-	if err == nil && data != nil {
-		json.Unmarshal(data, errorResponse)
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
 	}
 
-	switch errorResponse.Code {
-	// Return specific Mobile Gateway Error
-	case errCodeSendFailed, errCodeInvalidJson, errCodeMissingAttrib, errCodeInvalidAttrib, errCodeBroadcastLimit, errCode400, errCode422:
-		return mobileGatewayErrorMap[errorResponse.Code]
+	errorRes := &ErrorResponse{Response: r}
+	if err = json.Unmarshal(data, errorRes); err != nil {
+		// The JSON returned doesn't match the error response schema, so it's
+		// possible that the request has gone through successfully, but there
+		// was something bad that happened while processing the data that led
+		// to the API returning a 'normal' response, but with a non-200 level
+		// HTTP code.
+		// Repack the body data for downstream unmarshaling to handle erroring.
+		r.Body = io.NopCloser(bytes.NewReader(data))
+		return nil
 	}
 
-	// If we can't match to any documented error codes, return the raw error
-	// object.
-	return err
+	// Return mapped Mobile Gateway Error for sentinel checking
+	if e, ok := mobileGatewayErrorMap[errorRes.Code]; ok {
+		return e
+	}
+
+	return errorRes
 }

@@ -17,7 +17,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewaySendFailed(t *testin
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error-desc":"Could not queue message due to an unknown error","error":"send_failed"}`)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Could not queue message due to an unknown error","error":"send_failed"}`)
 	})
 
 	payload := &Message{
@@ -53,7 +53,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayInvalidJSON(t *testi
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error-desc":"Invalid JSON data in the request body","error":"invalid_json"}`)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Invalid JSON data in the request body","error":"invalid_json"}`)
 	})
 
 	payload := &Message{}
@@ -78,7 +78,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayMissingAttribute(t *
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error-desc":"Missing required destination attribute","error":"missing_attrib"}`)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Missing required destination attribute","error":"missing_attrib"}`)
 	})
 
 	payload := &Message{
@@ -112,7 +112,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayInvalidAttribute(t *
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error-desc":"Invalid attribute value","error":"invalid_attrib"}`)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Invalid attribute value","error":"invalid_attrib"}`)
 	})
 
 	payload := &Message{
@@ -146,7 +146,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayInvalidTimestampForm
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error-desc":"Invalid scheduled timestamp (must be RFC3339)","error":"400"}`)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Invalid scheduled timestamp (must be RFC3339)","error":"400"}`)
 	})
 
 	payload := &Message{
@@ -180,7 +180,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayInvalidTimestamp(t *
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error-desc":"Invalid scheduled timestamp (must not be in the past)","error":"422"}`)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Invalid scheduled timestamp (must not be in the past)","error":"422"}`)
 	})
 
 	payload := &Message{
@@ -204,6 +204,35 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayInvalidTimestamp(t *
 	}
 }
 
+func TestMobileGatewayService_CreateMessage_ErrMobileGatewayNumberNotRoutable(t *testing.T) {
+	client, mux, _, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/messages", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testHeader(t, r, "Authorization", expectedAuthHeader)
+		testHeader(t, r, "Accept", mediaTypeV1)
+
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Unable to route message to destination","error":"unable to route message"}`)
+	})
+
+	payload := &Message{
+		Destination: "+99999999999",
+		Content:     "Hi, this is a test message to ensure you are texting correctly",
+		Source:      "TEST",
+	}
+	_, got := client.MobileGateway.CreateMessage(payload)
+	if got == nil {
+		t.Errorf("MobileGateway.CreateMessage should have returned ErrMobileGatewayNumberNotRoutable")
+	}
+
+	want := ErrMobileGatewayNumberNotRoutable
+	if got != want {
+		t.Errorf("MobileGateway.CreateMessage returned %+v, want %+v", got, want)
+	}
+}
+
 func TestMobileGatewayService_CreateMessage_ErrMobileGatewayMessageIDNotFound_EmptySlice(t *testing.T) {
 	client, mux, _, teardown := setup()
 	defer teardown()
@@ -214,7 +243,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayMessageIDNotFound_Em
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `[]`)
+		_, _ = fmt.Fprint(w, `[]`)
 	})
 
 	payload := &Message{
@@ -248,7 +277,7 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayMessageIDNotFound_Em
 		testHeader(t, r, "Accept", mediaTypeV1)
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, ``)
+		_, _ = fmt.Fprint(w, ``)
 	})
 
 	payload := &Message{
@@ -284,7 +313,7 @@ func TestMobileGatewayService_CreateMessage(t *testing.T) {
 
 		// Modica's REST api returns a non keyed raw array with a single int,
 		// representing the message ID if successful.
-		fmt.Fprint(w, `[123]`)
+		_, _ = fmt.Fprint(w, `[123]`)
 	})
 
 	payload := &Message{
@@ -317,7 +346,7 @@ func TestMobileGatewayService_GetMessage(t *testing.T) {
 		testHeader(t, r, "Authorization", expectedAuthHeader)
 		testHeader(t, r, "Accept", mediaTypeV1)
 
-		fmt.Fprint(w, `{"id":123,"destination":"+642123456789","content":"Hi, this is a test message to ensure you are texting correctly","source":"TEST","reference":"alt-reference","operator":"2degrees","reply_to":"123"}`+"\n")
+		_, _ = fmt.Fprint(w, `{"id":123,"destination":"+642123456789","content":"Hi, this is a test message to ensure you are texting correctly","source":"TEST","reference":"alt-reference","operator":"2degrees","reply_to":"123"}`+"\n")
 	})
 
 	got, err := client.MobileGateway.GetMessage(123)
@@ -372,7 +401,7 @@ func TestMobileGatewayService_CreateBroadcastMessage_ErrMobileGatewayBroadcastLi
 		testBody(t, r, `{"destination":["+61234567890","+60987654321"],"content":"Hi, this is a test message to ensure you are texting correctly","source":"TEST","scheduled":"2017-05-05T10:00:00+12:00","reference":"alt-reference","class":"mt_message","sms_class":2}`+"\n")
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, `{"error-desc":"Broadcast limit has been exceeded, please consult the error description for more detail.","error":"broadcast_limit"}`)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Broadcast limit has been exceeded, please consult the error description for more detail.","error":"broadcast_limit"}`)
 	})
 
 	payload := &BroadcastMessage{
@@ -408,7 +437,7 @@ func TestMobileGatewayService_CreateBroadcastMessage(t *testing.T) {
 		testHeader(t, r, "Accept", mediaTypeV1)
 		testBody(t, r, `{"destination":["+61234567890","X","0123456789"],"content":"Hi, this is a test message to ensure you are texting correctly","source":"TEST","scheduled":"2017-05-05T10:00:00+12:00","reference":"alt-reference","class":"mt_message","sms_class":2}`+"\n")
 
-		fmt.Fprint(w, `[{"status":"success","message":null,"destination":"+61234567890","id":123},{"status":"failure","message":"Invalid destination (X)","destination":"X","id":null},{"status":"failure","message":"That's not a real phone number is it","destination":"0123456789","id":null}]`)
+		_, _ = fmt.Fprint(w, `[{"status":"success","message":null,"destination":"+61234567890","id":123},{"status":"failure","message":"Invalid destination (X)","destination":"X","id":null},{"status":"failure","message":"That's not a real phone number is it","destination":"0123456789","id":null}]`)
 	})
 
 	payload := &BroadcastMessage{

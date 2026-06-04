@@ -2,9 +2,9 @@
 [![Build Status](https://travis-ci.org/matthewhartstonge/go-modica.svg?branch=master)](https://travis-ci.org/matthewhartstonge/go-modica)
 [![Go Report Card](https://goreportcard.com/badge/github.com/matthewhartstonge/go-modica)](https://goreportcard.com/report/github.com/matthewhartstonge/go-modica)
 
-go-modica is a Go Client library for accessing [Modicagroup's RESTful APIs.][modica api uri]
+`go-modica` is a Go Client library for accessing [Modicagroup's RESTful APIs.][modica api uri]
 
-go-modica requires Go version 1.8 or greater.
+Requires Go version 1.20 or greater.
 
 [modica api uri]: https://confluence.modicagroup.com/display/DC/Modica+API+Documentation
 
@@ -92,17 +92,7 @@ for _, status := range messageStatuses {
 }
 ```
 
-[omnidashboard]: https://omni.modicagroup.com
-
-## Roadmap ##
-
-This library is being initially developed for an internal application at
-LINC-ED, so API methods will likely be implemented in the order that they are
-needed by that application. Eventually, I would like to cover the entire
-Modica API, so contributions are of course always welcome. The calling pattern 
-is pretty well established, so adding new methods is relatively straightforward.
-
-## Versioning ##
+## Versioning
 In general, go-modica follows [semver](https://semver.org/) as closely as we can 
 for tagging releases of the package.
 
@@ -112,7 +102,7 @@ for tagging releases of the package.
 	functionality, including new features.
 * The patch version is incremented with any backwards-compatible bug fixes.
 
-## License ##
+## License
 
 This library is distributed under the BSD-style license found in the [LICENSE](./LICENSE)
 file.

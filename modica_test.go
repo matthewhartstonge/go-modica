@@ -77,3 +77,40 @@ func testBody(t *testing.T, r *http.Request, want string) {
 		t.Errorf("request Body is %s, want %s", got, want)
 	}
 }
+
+func TestCheckErrorResponse_ErrUnauthorized(t *testing.T) {
+	client, mux, _, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/messages/1", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	})
+
+	_, got := client.MobileGateway.GetMessage(1)
+	if got != ErrUnauthorized {
+		t.Errorf("GetMessage returned %+v, want ErrUnauthorized", got)
+	}
+}
+
+func TestCheckErrorResponse_UnknownErrorCode(t *testing.T) {
+	client, mux, _, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/messages/1", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprint(w, `{"error":"server_exploded","error-desc":"The server exploded"}`)
+	})
+
+	_, got := client.MobileGateway.GetMessage(1)
+	if got == nil {
+		t.Fatal("GetMessage should have returned an error for an unknown error code")
+	}
+
+	errResp, ok := got.(*ErrorResponse)
+	if !ok {
+		t.Fatalf("expected *ErrorResponse, got %T: %v", got, got)
+	}
+	if errResp.Code != "server_exploded" {
+		t.Errorf("ErrorResponse.Code = %q, want %q", errResp.Code, "server_exploded")
+	}
+}

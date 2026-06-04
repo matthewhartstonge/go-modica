@@ -204,6 +204,35 @@ func TestMobileGatewayService_CreateMessage_ErrMobileGatewayInvalidTimestamp(t *
 	}
 }
 
+func TestMobileGatewayService_CreateMessage_ErrMobileGatewayNumberNotRoutable(t *testing.T) {
+	client, mux, _, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/messages", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testHeader(t, r, "Authorization", expectedAuthHeader)
+		testHeader(t, r, "Accept", mediaTypeV1)
+
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = fmt.Fprint(w, `{"error-desc":"Unable to route message to destination","error":"unable to route message"}`)
+	})
+
+	payload := &Message{
+		Destination: "+99999999999",
+		Content:     "Hi, this is a test message to ensure you are texting correctly",
+		Source:      "TEST",
+	}
+	_, got := client.MobileGateway.CreateMessage(payload)
+	if got == nil {
+		t.Errorf("MobileGateway.CreateMessage should have returned ErrMobileGatewayNumberNotRoutable")
+	}
+
+	want := ErrMobileGatewayNumberNotRoutable
+	if got != want {
+		t.Errorf("MobileGateway.CreateMessage returned %+v, want %+v", got, want)
+	}
+}
+
 func TestMobileGatewayService_CreateMessage_ErrMobileGatewayMessageIDNotFound_EmptySlice(t *testing.T) {
 	client, mux, _, teardown := setup()
 	defer teardown()

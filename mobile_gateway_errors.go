@@ -9,6 +9,7 @@ const (
 	errCodeMissingAttrib  = "missing_attrib"
 	errCodeInvalidAttrib  = "invalid_attrib"
 	errCodeBroadcastLimit = "broadcast_limit"
+	errCodeUnableToRoute  = "unable to route message"
 	errCode400            = "400"
 	errCode422            = "422"
 )
@@ -47,6 +48,11 @@ var (
 	// returned from the API, but the request to create a new message was
 	// successful.
 	ErrMobileGatewayMessageIDNotFound = errors.New("message id not found")
+
+	// ErrMobileGatewayNumberNotRoutable is returned when an SMS gateway can't
+	// deliver an SMS to the provided mobile number. Either a non-parsable
+	// number or one that doesn't match the geo-lock.
+	ErrMobileGatewayNumberNotRoutable = errors.New("unable to route sms delivery to the provided mobile number")
 )
 
 var mobileGatewayErrorMap = map[string]error{
@@ -55,6 +61,7 @@ var mobileGatewayErrorMap = map[string]error{
 	errCodeMissingAttrib:  ErrMobileGatewayMissingAttribute,
 	errCodeInvalidAttrib:  ErrMobileGatewayInvalidAttribute,
 	errCodeBroadcastLimit: ErrMobileGatewayBroadcastLimit,
+	errCodeUnableToRoute:  ErrMobileGatewayNumberNotRoutable,
 	errCode400:            ErrMobileGatewayInvalidTimestampFormat,
 	errCode422:            ErrMobileGatewayInvalidTimestamp,
 }

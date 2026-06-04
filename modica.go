@@ -12,7 +12,7 @@ import (
 
 const (
 	defaultBaseURL = "https://api.modicagroup.com/rest/gateway/"
-	userAgent      = "go-modica"
+	userAgent      = "go-modica/" + Version
 )
 
 const (

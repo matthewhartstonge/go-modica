@@ -1,0 +1,25 @@
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    target-branch: main
+    commit-message:
+      prefix: "ci(deps)"
+
+  - package-ecosystem: "gomod"
+    allow:
+      - dependency-type: direct
+    directories:
+      - "/"
+    groups:
+      default:
+        patterns:
+          - "*"
+    schedule:
+      interval: "monthly"
+    target-branch: main
+    commit-message:
+      prefix: "build(deps)"

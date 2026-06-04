@@ -109,7 +109,7 @@ type Message struct {
 	// Destination contains the destination mobile number the SMS message will
 	// be sent to. Number format must be international format
 	// e.g. +64211234567 / +61414123456 / +18123456789.
-	Destination string `json:"destination,omitemptys"`
+	Destination string `json:"destination,omitempty"`
 
 	// Content contains the text to be sent verbatim to the mobile phone.
 	Content string `json:"content"`

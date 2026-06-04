@@ -1,5 +1,5 @@
 # go-modica #
-[![build](https://github.com/matthewhartstonge/go-modica/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/matthewhartstonge/go-modica/actions/workflows/build.yaml)
+[![build](https://github.com/matthewhartstonge/go-modica/actions/workflows/build.yaml/badge.svg)](https://github.com/matthewhartstonge/go-modica/actions/workflows/build.yaml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/matthewhartstonge/go-modica)](https://goreportcard.com/report/github.com/matthewhartstonge/go-modica)
 
 `go-modica` is a Go Client library for accessing [Modicagroup's RESTful APIs.][modica api uri]
